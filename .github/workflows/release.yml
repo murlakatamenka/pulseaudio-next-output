@@ -1,0 +1,71 @@
+name: Publish Binaries
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-upload:
+    name: Build for ${{ matrix.build }}
+    runs-on: ${{ matrix.os }}
+    env:
+      OUT_DIR: target/${{ matrix.target }}/release
+    strategy:
+      matrix:
+        include:
+          - build: "linux-gnu 🐧"
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            upx_args: --best --lzma
+
+    steps:
+      - name: Setup | 🦀 Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+
+      - name: Setup | 🛠️ libpulse0
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0
+
+      - name: Setup | 📂 checkout sources
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Build | 🔨 🔥 release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Setup | Generate asset name
+        id: asset_name
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "::set-output name=ASSET::pulseaudio-next-output-$VERSION-${{ matrix.target }}.tar.gz"
+
+      - name: Package | Strip / compress binary
+        uses: svenstaro/upx-action@v2
+        with:
+          file: ${{ env.OUT_DIR }}/pulseaudio-next-output
+          args: ${{ matrix.upx_args }}
+
+      - name: Package | 📦 create tarball
+        run: |
+          tar czf pulseaudio-next-output.tar.gz --directory="${{ env.OUT_DIR }}" pulseaudio-next-output
+
+      - name: Release 🎉
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: pulseaudio-next-output.tar.gz
+          tag: ${{ github.ref }}
+          asset_name: ${{ steps.asset_name.outputs.ASSET }}

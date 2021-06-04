@@ -1,0 +1,26 @@
+name: Rust
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📂 Checkout Sources
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: 🛠️ Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0
+      - name: Test
+        run: cargo test
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+      - name: Format
+        run: cargo fmt --all -- --check
