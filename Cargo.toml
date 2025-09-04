@@ -2,7 +2,7 @@
 name = "pulseaudio-next-output"
 version = "0.1.0"
 authors = ["Sergey A. <murlakatamenka@disroot.org>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "Simple CLI utility to cycle through PulseAudio outputs."
 keywords = ["pulseaudio", "cli", "linux", "audio"]
@@ -13,7 +13,7 @@ repository = "https://github.com/murlakatamenmurlakatamenka/pulseaudio-next-outp
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-owo-colors = "3.4"
+owo-colors = "4.2"
 pulsectl-rs = "0.3"
 
 [profile.release]
